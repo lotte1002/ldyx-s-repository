@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>专属惊喜网页</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FF6B8B',
+            secondary: '#FFD194',
+            accent: '#94D0FF',
+            neutral: '#F8F8F8',
+            dark: '#333333'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .hover-scale {
+        transition: transform 0.3s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.05);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+      }
+      .heart {
+        position: absolute;
+        opacity: 0;
+        animation: float 3s ease-in-out forwards;
+        cursor: pointer;
+      }
+      @keyframes float {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        80% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+      .memory-modal {
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.5s ease;
+      }
+      .memory-modal.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .date-counter {
+        position: relative;
+        display: inline-block;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .days-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 0 10px rgba(255, 107, 139, 0.8);
+      }
+    }
+  </style>
+</head>
+<body class="bg-neutral text-dark">
+  <!-- 顶部导航栏 -->
+  <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 shadow-sm transition-all duration-300">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="text-primary font-bold text-xl flex items-center">
+        <i class="fa fa-heart mr-2"></i>
+        <span>给最爱的你</span>
+      </div>
+      <div class="hidden md:flex space-x-6">
+        <a href="#anime" class="text-dark hover:text-primary transition-colors">动漫角色</a>
+        <a href="#people" class="text-dark hover:text-primary transition-colors">特别的人</a>
+        <a href="#shows" class="text-dark hover:text-primary transition-colors">电视节目</a>
+        <a href="#food" class="text-dark hover:text-primary transition-colors">美食</a>
+        <a href="#fruits" class="text-dark hover:text-primary transition-colors">水果</a>
+      </div>
+      <button class="md:hidden text-primary text-xl">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 头部区域 - 改进的相识天数模块 -->
+  <header class="pt-24 pb-16 bg-gradient-to-br from-primary/90 to-secondary/90 text-white text-center">
+    <div class="container mx-auto px-4">
+      <!-- 相识天数计算 -->
+      <div class="mb-8 animate-fade-in" style="animation-delay: 0.1s">
+        <h2 class="text-2xl md:text-3xl font-bold text-shadow mb-2">我们相识于</h2>
+        <div class="date-counter mb-4">
+          <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+            <span class="text-xl md:text-2xl" id="meetDateDisplay">2021年4月2日</span>
+            <span class="days-number" id="daysCount">1521</span>
+            <span class="text-xl md:text-2xl">天</span>
+          </div>
+        </div>
+      </div>
+
+      <h1 class="text-[clamp(2.5rem,5vw,4rem)] font-bold mb-4 text-shadow animate-fade-in">致我最爱的你</h1>
+      <p class="text-[clamp(1.2rem,3vw,1.5rem)] max-w-2xl mx-auto mb-8 animate-fade-in" style="animation-delay: 0.2s">
+        收集你喜欢的小美好，给你专属惊喜呀
+      </p>
+      <div class="relative h-40" id="heart-container">
+        <!-- 爱心会通过JS动态生成 -->
+      </div>
+      <a href="#anime" class="inline-block bg-white text-primary px-8 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in" style="animation-delay: 0.4s">
+        开始探索 <i class="fa fa-arrow-down ml-2"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- 内容容器 -->
+  <main class="container mx-auto px-4 py-16">
+    <!-- 记忆弹窗 -->
+    <div id="memory-modal" class="memory-modal fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all duration-500 scale-95">
+        <div class="text-right mb-4">
+          <button id="close-modal" class="text-gray-500 hover:text-primary transition-colors">
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <h3 class="text-2xl font-bold text-primary mb-4" id="memory-title">甜蜜回忆</h3>
+        <p class="text-lg" id="memory-content">这是我们的第一个约会地点...</p>
+        <div class="mt-6 text-center">
+          <button id="new-memory" class="bg-primary text-white px-6 py-2 rounded-full hover:bg-primary/80 transition-colors">
+            再看一个 <i class="fa fa-heart ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 动漫角色卡片 -->
+    <section id="anime" class="mb-16 animate-fade-in">
+      <div class="card-hover bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-accent/20 to-primary/10 p-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-dark flex items-center">
+            <i class="fa fa-paint-brush text-primary mr-3"></i>
+            你爱的动漫角色
+          </h2>
+        </div>
+        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div class="flex flex-col md:flex-row gap-4">
+            <img src="https://picsum.photos/seed/yuanshan/400/300" alt="远山和叶" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+            <img src="https://picsum.photos/seed/huiyuan/400/300" alt="灰原哀" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+          </div>
+          <p class="text-lg leading-relaxed">
+            远山和叶的直爽与坚守超迷人，灰原哀的聪慧和温柔也超戳心～她们陪伴你的时光，就像你陪伴我一样珍贵，我也想在你身边，陪你追每一个喜欢的故事呀～
+            <span class="text-primary font-medium">点击爱心，发现更多甜蜜回忆</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 人物卡片 -->
+    <section id="people" class="mb-16 animate-fade-in" style="animation-delay: 0.1s">
+      <div class="card-hover bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-accent/20 to-primary/10 p-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-dark flex items-center">
+            <i class="fa fa-user text-primary mr-3"></i>
+            特别的“lwht”
+          </h2>
+        </div>
+        <div class="p-6 md:p-8">
+          <div class="flex justify-center mb-6">
+            <img src="https://picsum.photos/seed/lwht/600/400" alt="lwht" class="rounded-xl shadow-md hover-scale max-w-lg w-full h-64 object-cover">
+          </div>
+          <p class="text-lg leading-relaxed">
+            这是专属于你的小秘密代号呀～不管它代表着怎样的故事，都是我想努力懂你的小线索，想一点点走进你的世界，和你分享所有美好～
+            <span class="text-primary font-medium">点击爱心，解锁专属回忆</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 电视节目卡片 -->
+    <section id="shows" class="mb-16 animate-fade-in" style="animation-delay: 0.2s">
+      <div class="card-hover bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-accent/20 to-primary/10 p-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-dark flex items-center">
+            <i class="fa fa-television text-primary mr-3"></i>
+            超赞的电视节目
+          </h2>
+        </div>
+        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div class="flex flex-col md:flex-row gap-4">
+            <img src="https://picsum.photos/seed/liezui/400/300" alt="猎罪图鉴" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+            <img src="https://picsum.photos/seed/mingzhentan/400/300" alt="名侦探学院" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+          </div>
+          <p class="text-lg leading-relaxed">
+            《猎罪图鉴》里的案件推理超精彩，画像师的视角太独特啦；《名侦探学院》一群聪明人头脑风暴，又有趣又涨知识～你喜欢的节目，我也慢慢爱上，因为想和你有更多共同话题呀，下次咱们一起看新内容，我陪你推理、陪你笑～
+            <span class="text-primary font-medium">点击爱心，记录我们的观影时光</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 美食卡片 -->
+    <section id="food" class="mb-16 animate-fade-in" style="animation-delay: 0.3s">
+      <div class="card-hover bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-accent/20 to-primary/10 p-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-dark flex items-center">
+            <i class="fa fa-utensils text-primary mr-3"></i>
+            超美味的美食
+          </h2>
+        </div>
+        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div class="flex flex-col md:flex-row gap-4">
+            <img src="https://picsum.photos/seed/shufulei/400/300" alt="舒芙蕾" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+            <img src="https://picsum.photos/seed/zhangyu/400/300" alt="章鱼小丸子" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+          </div>
+          <p class="text-lg leading-relaxed">
+            松软的舒芙蕾像云朵一样甜，章鱼小丸子咬一口满是鲜鲜的快乐～好想带你吃遍这些美味，把每一口甜蜜都分享给你，以后咱们的美食清单，要一起打卡好多好多呀，你的笑容和美食一样，能甜到我心里～
+            <span class="text-primary font-medium">点击爱心，计划我们的下一次美食之旅</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 水果卡片 -->
+    <section id="fruits" class="mb-16 animate-fade-in" style="animation-delay: 0.4s">
+      <div class="card-hover bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-accent/20 to-primary/10 p-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-dark flex items-center">
+            <i class="fa fa-apple-alt text-primary mr-3"></i>
+            酸甜的水果
+          </h2>
+        </div>
+        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <img src="https://picsum.photos/seed/yangmei/400/300" alt="杨梅" class="rounded-xl shadow-md hover-scale w-full md:w-64 h-48 object-cover">
+          <p class="text-lg leading-relaxed">
+            酸酸甜甜的杨梅，就像我们的小日子，偶尔有点小调皮的酸，更多是藏不住的甜～每次吃杨梅，都能想起你笑起来的样子，以后每年杨梅季，我都想给你攒一筐的甜，把这份美好一直延续下去～
+            <span class="text-primary font-medium">点击爱心，珍藏我们的酸甜记忆</span>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-12">
+    <div class="container mx-auto px-4 text-center">
+      <h3 class="text-2xl font-bold mb-4">爱你的专属惊喜</h3>
+      <p class="mb-6">用这个小网页记录我们的点点滴滴，愿我们的爱情如星辰般永恒</p>
+      <div class="flex justify-center space-x-6 mb-8">
+        <a href="#" class="text-white hover:text-primary transition-colors">
+          <i class="fa fa-heart text-2xl"></i>
+        </a>
+        <a href="#" class="text-white hover:text-primary transition-colors">
+          <i class="fa fa-star text-2xl"></i>
+        </a>
+        <a href="#" class="text-white hover:text-primary transition-colors">
+          <i class="fa fa-moon text-2xl"></i>
+        </a>
+      </div>
+      <p class="text-sm text-gray-400">用❤️制作 · 永远爱你</p>
+    </div>
+  </footer>
+
+  <script>
+    // 记忆数据
+    const memories = [
+      { title: "我们的初见", content: "还记得第一次见面的场景吗？你穿着淡蓝色的裙子，笑起来特别甜，那一刻我就知道，你是特别的人。" },
+      { title: "第一次约会", content: "第一次约会，我们一起看了那场浪漫的电影，你靠在我肩上的那一刻，我感觉整个世界都安静了。" },
+      { title: "你的笑容", content: "最喜欢看你笑的样子，像阳光一样温暖，希望我能成为你每天快乐的源泉。" },
+      { title: "未来的约定", content: "我想和你一起看遍世间美景，吃遍天下美食，一起经历生活的酸甜苦辣，永远不分离。" },
+      { title: "特别的礼物", content: "这个网页是我精心为你准备的礼物，希望它能记录我们的爱情故事，成为我们美好回忆的一部分。" },
+      { title: "简单的幸福", content: "只要和你在一起，哪怕只是静静地坐着，我也觉得无比幸福。这就是爱情最美好的样子吧。" },
+      { title: "谢谢你", content: "谢谢你出现在我的生命里，让我明白了什么是爱，什么是牵挂。我爱你，永远永远。" },
+      { title: "我们的歌", content: "还记得我们的定情之歌吗？每次听到它，都会想起我们一起度过的美好时光。" },
+      { title: "冬日的温暖", content: "冬天，你把手放在我手心取暖的那一刻，我就决定，这辈子都要给你温暖。" },
+      { title: "梦想与你", content: "我的梦想很简单，就是和你一起建立一个温暖的家，生几个可爱的宝宝，一起慢慢变老。" }
+    ];
+
+    // DOM元素
+    const heartContainer = document.getElementById('heart-container');
+    const memoryModal = document.getElementById('memory-modal');
+    const memoryTitle = document.getElementById('memory-title');
+    const memoryContent = document.getElementById('memory-content');
+    const closeModal = document.getElementById('close-modal');
+    const newMemoryBtn = document.getElementById('new-memory');
+    const meetDateDisplay = document.getElementById('meetDateDisplay');
+    const daysCount = document.getElementById('daysCount');
+
+    // 初始化日期 - 使用固定的相识日期
+    const initialMeetDate = new Date('2021-04-02');
+    updateDaysCounter(initialMeetDate);
+
+    // 更新天数计数器
+    function updateDaysCounter(date) {
+      const today = new Date();
+      const timeDiff = today - date;
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      
+      // 格式化显示日期
+      const formattedDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+      
+      meetDateDisplay.textContent = formattedDate;
+      daysCount.textContent = daysDiff;
+    }
+
+    // 生成随机爱心
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'heart text-primary text-2xl';
+      heart.innerHTML = '<i class="fa fa-heart"></i>';
+      
+      // 随机位置
+      const x = Math.random() * 100;
+      const size = Math.random() * 20 + 16; // 16px 到 36px
+      
+      heart.style.left = `${x}%`;
+      heart.style.fontSize = `${size}px`;
+      heart.style.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
+      
+      heartContainer.appendChild(heart);
+      
+      // 点击爱心显示随机记忆
+      heart.addEventListener('click', () => {
+        showRandomMemory();
+      });
+      
+      // 动画结束后移除
+      setTimeout(() => {
+        heart.remove();
+      }, 3000);
+    }
+
+    // 显示随机记忆
+    function showRandomMemory() {
+      const randomMemory = memories[Math.floor(Math.random() * memories.length)];
+      memoryTitle.textContent = randomMemory.title;
+      memoryContent.textContent = randomMemory.content;
+      memoryModal.classList.add('active');
+    }
+
+    // 关闭模态框
+    closeModal.addEventListener('click', () => {
+      memoryModal.classList.remove('active');
+    });
+
+    // 获取新记忆
+    newMemoryBtn.addEventListener('click', () => {
+      showRandomMemory();
+    });
+
+    // 点击空白处关闭模态框
+    memoryModal.addEventListener('click', (e) => {
+      if (e.target === memoryModal) {
+        memoryModal.classList.remove('active');
+      }
+    });
+
+    // 键盘ESC关闭模态框
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && memoryModal.classList.contains('active')) {
+        memoryModal.classList.remove('active');
+      }
+    });
+
+    // 滚动效果
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // 滚动时导航栏效果
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('nav');
+      if (window.scrollY > 50) {
+        nav.classList.add('py-2', 'shadow-md');
+        nav.classList.remove('py-3', 'shadow-sm');
+      } else {
+        nav.classList.add('py-3', 'shadow-sm');
+        nav.classList.remove('py-2', 'shadow-md');
+      }
+    });
+
+    // 定期生成爱心
+    setInterval(createHeart, 1000);
+
+    // 页面加载时生成一些爱心
+    for (let i = 0; i < 5; i++) {
+      setTimeout(createHeart, i * 300);
+    }
+  </script>
+</body>
+</html>
